@@ -40,19 +40,81 @@ def get_unvisited(matrix):
 # with 70% probability mark a cell as unblocked
 def mark_unblocked():
 
+    check = random.randint(1, 100)
+    if check <= 70:
+        unblock = True
+    else:
+        unblock = False
+
+    return unblock
+
 
 # get all neighbors of present cell
 def get_neighbors((c, r), move):
 
+    global grid
+    (col, row) = get_grid_size(grid)
+
+    # for available neighbors
+    neighbors = []
+
+    # get all neighbors
+    for i in range(len(move[0])):
+        r_new = r + move[0][i]
+        c_new = c + move[1][i]
+
+        # if neighbor exist
+        if r_new >= 0 and r_new < row and c_new >=0 and c_new < col:
+
+            # if neighbor is unvisited
+            if grid[r_new][c_new] == 0:
+                # if unblocked
+                if mark_unblocked():
+                    # unblocked neighbor added
+                    neighbors.append((c_new, r_new))
+                else:
+                    # mark it as visited
+                    grid[r_new][c_new] = 1
+
+    return neighbors
 
 
 # add elements in neighbors to dfs_list; neighbors(index) to be the last
 def add_dfs(neighbors, open_list, index):
 
+    # if not empty
+    if len(neighbors) > 0 and index >= 0 and len(neighbors) > index:
+
+        # add all expanded_list elements in dfs_list
+        for i in range(len(neighbors)):
+            if i != index:
+                open_list.append(neighbors[i])
+
+        # expanded(index) is the last of dfs_list and will be expanded in next search
+        open_list.append(neighbors[index])
+
+    return open_list
 
 
 # get a unblocked cell
 def get_unblocked(maze_grid):
+
+    # get size
+    (col, row) = get_grid_size(maze_grid)
+
+    # randomly get a unblocked cell
+    get_next = True
+    while get_next:
+        c = random.randint(0, col - 1)
+        r = random.randint(0, row - 1)
+
+        # if unblocked
+        if maze_grid[r][c] == 0:
+            get_next = False
+
+    cell_unblocked = (c, r)
+
+    return cell_unblocked
 
 
 # ----------------------------------- create maze ----------------------------------- #
@@ -128,6 +190,20 @@ def create_maze_dfs(col=101, row=101):
 
 #  set start and goal state
 def set_state(maze_grid):
+
+    # get a unblocked cell as start
+    (c_1, r_1) = get_unblocked(maze_grid)
+    start = (c_1, r_1)
+    # set the cell in maze_grid as "A"
+    maze_grid[r_1][c_1] = "A"
+
+    # get another unblocked cell as goal
+    (c_2, r_2) = get_unblocked(maze_grid)
+    goal = (c_2, r_2)
+    # set the cell in maze grid as "T"
+    maze_grid[r_2][c_2] = "T"
+
+    return start, goal, maze_grid
 
 
 # draw maze
