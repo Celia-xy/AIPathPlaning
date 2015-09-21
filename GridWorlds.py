@@ -209,3 +209,33 @@ def set_state(maze_grid):
 # draw maze
 def draw_grid(maze_grid):
 
+    # get size
+    (col, row) = get_grid_size(maze_grid)
+
+    screen = Tkinter.Tk()
+    canvas = Tkinter.Canvas(screen, width=(col+2)*5, height=(row+2)*5)
+    canvas.pack()
+
+    # create initial grid world
+    for c in range(1, col+2):
+        canvas.create_line(c*5, 5, c*5, (row+1)*5, width=1)
+    for r in range(1, row+2):
+        canvas.create_line(5, r*5, (col+1)*5, r*5+1, width=1)
+
+    # mark blocked grid as black, start state as red, goal as green
+    for c in range(0, col):
+        for r in range(0, row):
+
+            # if blocked
+            if maze_grid[r][c] == 1:
+                canvas.create_rectangle((c+1)*5+1, (r+1)*5+1, (c+2)*5, (r+2)*5, fill="black")
+            # if start
+            if maze_grid[r][c] == "A":
+                canvas.create_rectangle((c+1)*5+1, (r+1)*5+1, (c+2)*5, (r+2)*5, fill="red")
+            # if goal
+            if maze_grid[r][c] == "T":
+                canvas.create_rectangle((c+1)*5+1, (r+1)*5+1, (c+2)*5, (r+2)*5, fill="green")
+
+    screen.mainloop()
+
+
