@@ -103,3 +103,75 @@ class Heap(object):
             self.heap[leaf] = last
             self.renew_leaf(leaf)
 
+
+# ---------------------------- class State ------------------------------- #
+
+# class state
+class State:
+
+    # the five elements used for A*
+    def __init__(self, position=(0, 0)):
+
+        # the coordinate of the present
+        self.position = position
+
+        # 1 if visited, 0 otherwise
+        self.visit = 0
+        # f, g, h values for A*
+        self.g = 10000
+        self.h = 0
+        self.f = self.h + self.g
+
+        # tree, necessary to identify a shortest path after A* search
+        self.tree = {}
+
+        # search is x if the state is generated last by x_th A* search
+        self.search = 0
+
+        # actions contains movement left, right, up, down, 1 if available
+        self.actions = [1, 1, 1, 1]
+
+    # renew h and f
+    def renew_hf(self, goal=(0,0)):
+
+        # calculate Manhattan distance from current state to goal state
+        dx = goal[0] - self.position[0]
+        dy = goal[1] - self.position[1]
+        self.h = abs(dx) + abs(dy)
+
+        # renew self.f
+        self.f = self.h + self.g
+
+        # renew f
+    def renew_f(self):
+
+        # renew self.f
+        self.f = self.h + self.g
+
+    # calculate the cost of action
+    def cost(self, action):
+
+        # if unblocked
+        if self.action_exist(action):
+            c = 1
+        else:
+            c = 1000
+
+        return c
+
+    # check if action is available, return bool
+    def action_exist(self, action):
+
+        # if action is available, return true
+        if self.actions[action] == 1:
+            exist = True
+        else:
+            exist = False
+
+        return exist
+
+    # mark the action as unavailable
+    def delete_action(self, action):
+
+        # delete action by setting it 0
+        self.actions[action] = 0
