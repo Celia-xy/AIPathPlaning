@@ -13,6 +13,32 @@ import Tkinter
 # create original grid of state of size (col, row)
 def create_state(col=100, row=100):
 
+    # create grid
+    state_grid = [[State() for i in range(col)] for i in range(row)]
+
+    # change values in state
+    for i in range(col):
+        for j in range(row):
+
+            # correct position
+            state_grid[j][i].position = (i, j)
+
+            # correct movement
+            # if the first column, remove left
+            if i == 0:
+                state_grid[j][i].actions[0] = 0
+            # if the first row, remove up
+            if j == 0:
+                state_grid[j][i].actions[2] = 0
+            # if the last column, remove right
+            if i == col-1:
+                state_grid[j][i].actions[1] = 0
+            # if the last row, remove down
+            if j == col-1:
+                state_grid[j][i].actions[3] = 0
+
+    return state_grid
+
 
 # ------------------------------- start A* ------------------------------------ #
 
@@ -24,6 +50,7 @@ move = [[0, 0, -1, 1], [-1, 1, 0, 0]]
 def get_succ(states, position, action):
 
 
+
 # if action is available, cost is 1, otherwise cost is 0
 def cost(state, position, action):
 
@@ -32,7 +59,7 @@ def cost(state, position, action):
 # search for a new path when original one blocked
 def compute_path(states, goal, open_list, close_list, counter, expanded, large_g, adaptive):
 
-
+    
 # --------------------------------------- A* search ---------------------------------------- #
 # (path, exist) = A_star_forward(start, goal, maze_grid, large_g="large", forward="forward", adaptive="adaptive"
 #
@@ -46,6 +73,142 @@ def compute_path(states, goal, open_list, close_list, counter, expanded, large_g
 #         exist: boolean, "True" if path exists, "False" otherwise
 
 def A_star_forward(start, goal, maze_grid, large_g="large", adaptive="adaptive"):
+
+    # initial state grid
+    states = create_state(len(maze_grid), len(maze_grid[0]))
+
+    # decide if goal is reached
+    reach_goal = False
+
+    counter = 0
+    expanded = 0
+    current = start
+    (cg, rg) = goal
+    path = []
+    path2 = []
+
+    # the current position
+    while reach_goal == False:
+
+        counter += 1
+        (cs, rs) = current
+        states[rs][cs].g = 0
+        states[rs][cs].renew_hf(goal)
+        states[rs][cs].search = counter
+        states[rg][cg].g = 10000
+        states[rg][cg].renew_hf(goal)
+        states[rg][cg].search = counter
+
+        # open_list is binary heap while each item contains two value: f, state
+        open_list = Heap()
+        # close_list only store state
+        close_list = []
+
+        open_state = states[rs][cs]
+        # choose favor of large g or small g when f is equal
+        if large_g == "large":
+            open_favor = states[rs][cs].f * 1000 - states[rs][cs].g
+        else:
+            open_favor = states[rs][cs].f * 1000 + states[rs][cs].g
+
+        # insert s_start into open list
+        open_list.insert([open_favor, open_state])
+        # compute path
+        (states, open_list, close_list, expanded) = compute_path(states, goal, open_list, close_list, counter, expanded, large_g, adaptive)
+        if len(open_list.heap) == 0:
+            print "I cannot reach the target."
+            break
+
+        # get the path from goal to start by tree-pointer
+        (cc, rc) = goal
+        path = [(cc, rc)]
+
+        while (cc, rc) != (cs, rs):
+            (cc, rc) = states[rc][cc].tree.position
+            path.append((cc, rc))
+
+        # follow the path
+        (c_0, r_0) = path[-1]
+
+        while states[r_0][c_0].position != (cg, rg):
+
+            # (c, r) = successor.position
+            (c, r) = path.pop()
+
+            try:
+                index = path2.index((c, r))
+            except ValueError:
+                path2.append((c, r))
+            else:
+                for i in range(index+1, len(path2)):
+                    path2.pop()
+
+            try:
+                index = path2.index((c, r))
+            except ValueError:
+                path2.append((c, r))
+            else:
+                for i in range(index+1, len(path2)):
+                    path2.pop()
+            if len(path2) > 4:
+                (c1, r1) = path2[-4]
+                (c2, r2) = path2[-1]
+                if abs(c1-c2) + abs(r1-r2) == 1:
+                    path2.pop(-3)
+                    path2.pop(-2)
+
+            # if blocked, stop and renew cost of all successors
+            if maze_grid[r][c] == 1:
+                states[r][c].g = 10000
+                states[r][c].renew_hf(goal)
+
+                # set action cost
+                if c - c_0 == 0:
+                    # cannot move down
+                    if r - r_0 == 1:
+                        states[r_0][c_0].actions[3] = 0
+
+                    # cannot move up
+                    else:
+                        states[r_0][c_0].actions[2] = 0
+                else:
+                    # cannot move right
+                    if c - c_0 == 1:
+                        states[r_0][c_0].actions[1] = 0
+
+                    # cannot move left
+                    else:
+                        states[r_0][c_0].actions[0] = 0
+
+                break
+
+            (c_0, r_0) = (c, r)
+
+        # set start to current position
+        current = (c_0, r_0)
+
+        if states[r_0][c_0].position == (cg, rg):
+            reach_goal = True
+
+    # if path from start to goal exists
+    if reach_goal:
+
+        # (cc, rc) = start
+        # path = []
+        #
+        # while (cc, rc) != (cs, rs):
+        #
+        #     path.append((cc, rc))
+        #     (cc, rc) = states[rc][cc].tree.position
+        #
+        # while len(path2) > 0:
+        #     path.append(path2.pop())
+
+        print "I reached the target"
+
+        print path2
+
+    return path2, reach_goal, expanded
 
 
 # draw the path from start to goal
