@@ -49,17 +49,108 @@ move = [[0, 0, -1, 1], [-1, 1, 0, 0]]
 # action is int from 0 to 3, represents left, right, up, down; position is (c, r); state is the state grid
 def get_succ(states, position, action):
 
+    # movement [[0, 0, up, down], [left, right, 0, 0]]
+    global move
+
+    (c, r) = position
+    if states[r][c].action_exist(action):
+
+        # get next position
+        r_new = r + move[0][action]
+        c_new = c + move[1][action]
+        succ = states[r_new][c_new]
+
+    return succ
 
 
 # if action is available, cost is 1, otherwise cost is 0
 def cost(state, position, action):
 
+    # movement [[0, 0, up, down], [left, right, 0, 0]]
+    global move
+
+    (c, r) = position
+    # if the action is available
+    if state[r][c].action_exist(action):
+        cost = 1
+    else:
+        cost = 1000
 
 # --------------------------------------------- #
 # search for a new path when original one blocked
 def compute_path(states, goal, open_list, close_list, counter, expanded, large_g, adaptive):
 
-    
+    global move
+
+    (cg, rg) = goal
+
+    while states[rg][cg].g > open_list.heap[-1][1].f:
+
+        # open_list is binary heap while each item contains two value: f, state
+        # remove the smallest f value item from open_list heap
+        last_item = open_list.pop()
+        # add the state with smallest f value into close_list
+        close_list.append(last_item[1])
+
+        (c, r) = last_item[1].position
+
+        for i in range(4):
+
+            if states[r][c].action_exist(i):
+                # get the successor of last item when action is i
+                pos = (c, r)
+                successor = get_succ(states, pos, i)
+
+                # the position of successor
+                r_succ = r + move[0][i]
+                c_succ = c + move[1][i]
+
+                try:
+                    close_list.index((c_succ, r_succ))
+                except ValueError:
+
+                    if successor.search < counter:
+
+                        # the successor state in state_grid
+                        states[r_succ][c_succ].g = 10000
+                        states[r_succ][c_succ].renew_hf(goal)
+                        states[r_succ][c_succ].search = counter
+
+                    if successor.g > states[r][c].g + states[r][c].cost(i):
+                        states[r_succ][c_succ].g = states[r][c].g + states[r][c].cost(i)
+                        states[r_succ][c_succ].renew_hf(goal)
+                        states[r_succ][c_succ].tree = states[r][c]
+
+                        succ_state = states[r_succ][c_succ]
+                        # choose favor of large g or small g when f is equal
+                        if large_g == "large":
+                            succ_favor = states[r_succ][c_succ].f * 10000 - states[r_succ][c_succ].g
+                        else:
+                            succ_favor = states[r_succ][c_succ].f * 10000 + states[r_succ][c_succ].g
+
+                        i = 0
+                        while i < len(open_list.heap) and len(open_list.heap) > 0:
+
+                            # if successor is in open list
+                            if succ_state.position == open_list.heap[i][1].position:
+
+                                # renew the g value in the corresponding open list item and renew heap
+                                open_list.remove(i)
+
+                            i += 1
+
+                        # insert the successor into open list
+                        open_list.insert([succ_favor, succ_state])
+                        expanded += 1
+                else:
+                    continue
+
+        if len(open_list.heap) == 0:
+            break
+
+    return states, open_list, close_list, expanded
+
+
 # --------------------------------------- A* search ---------------------------------------- #
 # (path, exist) = A_star_forward(start, goal, maze_grid, large_g="large", forward="forward", adaptive="adaptive"
 #
@@ -214,3 +305,4 @@ def A_star_forward(start, goal, maze_grid, large_g="large", adaptive="adaptive")
 # draw the path from start to goal
 def draw_path(maze_grid, path):
 
+    
