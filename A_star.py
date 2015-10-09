@@ -1,4 +1,3 @@
-
 # The A* algorithm is for shortest path from start to goal in a grid maze
 # The algorithm has many different choices:
 # choose large or small g when f values are equal; forward or backward; adaptive or not
