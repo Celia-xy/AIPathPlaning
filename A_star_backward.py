@@ -156,3 +156,16 @@ def draw_path(maze_grid, path):
     screen.mainloop()
 
 
+# test
+my_maze = create_maze_dfs(101, 101)
+(start, goal, my_maze) = set_state(my_maze)
+
+# get path by A* search
+(PATH, reach_goal, expanded) = A_star_backward(start, goal, my_maze, "large", "forward")
+
+# if path exist, draw maze and path
+if reach_goal:
+    draw_path(my_maze, PATH)
+    print expanded
+else:
+    print "Path doesn't exist"
